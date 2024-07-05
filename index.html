@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Remote Desktop</title>
+  <style>
+    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+    #screen { width: 100%; height: 100%; display: block; }
+  </style>
+</head>
+<body>
+  <img id="screen" />
+  <script>
+    const screen = document.getElementById('screen');
+    const ws = new WebSocket('ws://localhost:3000');
+
+    ws.onmessage = event => {
+      const blob = new Blob([event.data], { type: 'image/jpeg' });
+      screen.src = URL.createObjectURL(blob);
+    };
+
+    document.addEventListener('mousemove', event => {
+      const x = event.clientX / window.innerWidth * 100;
+      const y = event.clientY / window.innerHeight * 100;
+      ws.send(JSON.stringify({ type: 'mouse', data: { x, y } }));
+    });
+
+    document.addEventListener('click', event => {
+      ws.send(JSON.stringify({ type: 'mouse', data: { click: true } }));
+    });
+
+    document.addEventListener('keypress', event => {
+      ws.send(JSON.stringify({ type: 'keyboard', data: { text: event.key } }));
+    });
+  </script>
+</body>
+</html>
